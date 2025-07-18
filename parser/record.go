@@ -152,7 +152,25 @@ func (r *Record) String(cfg *config.Config) string {
 				continue
 			}
 			key := color.HiBlueString(key)
-			line += fmt.Sprintf(" %s=%s", key, getFormattedValue(value))
+			if cfg.Raw {
+				line += fmt.Sprintf(" %s", value)
+			} else {
+				line += fmt.Sprintf(" %s=%s", key, getFormattedValue(value))
+			}
+		}
+		if cfg.All {
+			for _, key := range r.fieldOrder {
+				if slices.Contains(cfg.OrderOutputFields, key) { // skip already printed ones
+					continue
+				}
+				value := r.fields[key]
+				key = color.HiBlueString(key)
+				if cfg.Raw {
+					line += fmt.Sprintf(" %s", value)
+				} else {
+					line += fmt.Sprintf(" %s=%s", key, getFormattedValue(value))
+				}
+			}
 		}
 	} else {
 		// If OutputFields in not set output in record order
@@ -162,12 +180,20 @@ func (r *Record) String(cfg *config.Config) string {
 			}
 			value := r.fields[key]
 			key = color.HiBlueString(key)
-			line += fmt.Sprintf(" %s=%s", key, getFormattedValue(value))
+			if cfg.Raw {
+				line += fmt.Sprintf(" %s", value)
+			} else {
+				line += fmt.Sprintf(" %s=%s", key, getFormattedValue(value))
+			}
 		}
 	}
 
 	if line == "" && !cfg.KeepEmpty {
 		return ""
+	}
+
+	if cfg.Raw {
+		return strings.TrimSpace(line)
 	}
 
 	var fmtString strings.Builder
